@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header":    "REPLACE_WITH_YOUR_HEADER_BASE64",
+    "payload":   "REPLACE_WITH_YOUR_PAYLOAD_BASE64",
+    "signature": "REPLACE_WITH_YOUR_SIGNATURE_BASE64"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "GcoinAgent",
+    "iconUrl": "https://gcoinagent.vercel.app/logo.png",
+    "homeUrl": "https://gcoinagent.vercel.app/miniapp",
+    "imageUrl": "https://gcoinagent.vercel.app/og-image.png",
+    "buttonTitle": "⚡ Live Signals",
+    "splashImageUrl": "https://gcoinagent.vercel.app/splash.png",
+    "splashBackgroundColor": "#050510",
+    "webhookUrl": "https://gcoinagent.vercel.app/api/webhook"
+  }
+}
