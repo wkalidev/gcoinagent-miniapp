@@ -2,13 +2,33 @@
 // Handles: frame_added, frame_removed, notifications_enabled, notifications_disabled
 
 interface WebhookPayload {
-  event:               "frame_added" | "frame_removed" | "notifications_enabled" | "notifications_disabled";
+  event: "frame_added" | "frame_removed" | "notifications_enabled" | "notifications_disabled";
   notificationDetails?: { token: string; url: string };
-  fid:                 number;
+  fid: number;
 }
 
 // In production: store tokens in a DB (Supabase, PlanetScale, Upstash, etc.)
 const tokenStore = new Map<number, { token: string; url: string }>();
+
+// ─── Helper: send a signal notification to a user (NON EXPORTÉE) ─────────────
+async function sendNotification(fid: number, title: string, body: string) {
+  const userData = tokenStore.get(fid);
+  if (!userData) return;
+
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://gcoinagent.vercel.app";
+
+  await fetch(userData.url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      notificationId: crypto.randomUUID(),
+      title,
+      body,
+      targetUrl: `${APP_URL}/miniapp`,
+      tokens: [userData.token],
+    }),
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -36,28 +56,4 @@ export async function POST(req: Request) {
     console.error("Webhook error:", e);
     return Response.json({ error: "Invalid payload" }, { status: 400 });
   }
-}
-
-// ─── Helper: send a signal notification to a user ────────────────────────────
-export async function sendNotification(
-  fid: number,
-  title: string,
-  body: string
-) {
-  const userData = tokenStore.get(fid);
-  if (!userData) return;
-
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://gcoinagent.vercel.app";
-
-  await fetch(userData.url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      notificationId: crypto.randomUUID(),
-      title,
-      body,
-      targetUrl: `${APP_URL}/miniapp`,
-      tokens: [userData.token],
-    }),
-  });
 }

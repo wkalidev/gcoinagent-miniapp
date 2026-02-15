@@ -7,8 +7,8 @@ const sdk = {
   actions: {
     ready: () => console.log("🟣 Frame ready"),
     addMiniApp: async () => ({ added: true }),
-    openUrl: (url) => window.open(url, "_blank"),
-    sendTransaction: async (tx) => ({ hash: "0x" + Math.random().toString(16).slice(2) }),
+    openUrl: (url: string) => window.open(url, "_blank"),
+    sendTransaction: async (tx: any) => ({ hash: "0x" + Math.random().toString(16).slice(2, 10) as string }),
   },
   context: {
     user: { fid: 12345, username: "willywarrior", displayName: "Willy Warrior", pfpUrl: "" },
@@ -40,9 +40,9 @@ const PLANS = [
 // ─── Subscription payment via USDC on Base ────────────────────────────────
 // Base network USDC contract
 const USDC_BASE   = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const WALLET_ADDR = "0xYOUR_WALLET_ADDRESS"; // ← paste your Base wallet here
+const WALLET_ADDR = "0xDEAcDe6eC27Fd0cD972c1232C4f0d4171dda2357"; // ← paste your Base wallet here
 
-async function paySubscription(planId) {
+async function paySubscription(planId: string) {
   const plan = PLANS.find(p => p.id === planId);
   if (!plan || plan.priceUSDC === 0) return { success: true, free: true };
   try {
@@ -54,7 +54,7 @@ async function paySubscription(planId) {
       data: `0xa9059cbb${WALLET_ADDR.slice(2).padStart(64,"0")}${amount.toString(16).padStart(64,"0")}`,
     });
     return { success: true, hash };
-  } catch(e) {
+  } catch(e: any) {
     return { success: false, error: e.message };
   }
 }
@@ -67,18 +67,24 @@ async function addToFavorites() {
   } catch { return false; }
 }
 
-const fmtN = n => n < 10 ? n.toFixed(4) : n.toLocaleString("en", {maximumFractionDigits:2});
-const sigCol = s => s === "BUY" ? "#00FF88" : s === "SELL" ? "#FF4466" : "#FFD700";
+const fmtN = (n: number) => n < 10 ? n.toFixed(4) : n.toLocaleString("en", {maximumFractionDigits:2});
+const sigCol = (s: string) => s === "BUY" ? "#00FF88" : s === "SELL" ? "#FF4466" : "#FFD700";
+
+interface Notification {
+  msg: string;
+  type: string;
+}
 
 export default function GcoinMiniApp() {
   const [view,        setView]        = useState("home");   // home | signals | subscribe | success
   const [userPlan,    setUserPlan]    = useState("free");
   const [loading,     setLoading]     = useState(false);
-  const [loadingPlan, setLoadingPlan] = useState(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [added,       setAdded]       = useState(false);
-  const [txHash,      setTxHash]      = useState(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
   const [user,        setUser]        = useState(sdk.context.user);
-  const [notification,setNotification]= useState(null);
+  const [notification, setNotification] = useState<Notification | null>(null);
+
 
   // Tell Farcaster the Mini App is ready
   useEffect(() => {
@@ -87,19 +93,19 @@ export default function GcoinMiniApp() {
     setTimeout(() => setLoading(false), 500);
   }, []);
 
-  const notify = (msg, type="success") => {
-    setNotification({ msg, type });
+  const notify = (msg: string, type: string = "success") => {
+    setNotification({ msg: msg, type: type });
     setTimeout(() => setNotification(null), 3500);
   };
 
-  const handleSubscribe = async (planId) => {
+  const handleSubscribe = async (planId: string) => {
     if (planId === "free") { setUserPlan("free"); notify("Welcome to GcoinAgent Free!"); return; }
     setLoadingPlan(planId);
     const result = await paySubscription(planId);
     setLoadingPlan(null);
     if (result.success) {
       setUserPlan(planId);
-      setTxHash(result.hash || null);
+      setTxHash(result.hash?.hash || null);
       setView("success");
       notify(`🎉 ${PLANS.find(p=>p.id===planId)?.name} activated!`);
     } else {
@@ -115,8 +121,8 @@ export default function GcoinMiniApp() {
   // ── Shared style tokens ────────────────────────────────────────────────
   const BG       = "#050510";
   const CARD     = {padding:16, borderRadius:12, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)"};
-  const BTN      = (col,full) => ({padding:full?"13px":"10px 18px", borderRadius:9, cursor:"pointer", border:`1px solid ${col}66`, background:`${col}22`, color:"#fff", fontSize:12, fontFamily:"monospace", letterSpacing:1, width:full?"100%":"auto", transition:"all .2s", display:"block"});
-  const BTN_SOLID= (col) => ({padding:"13px", borderRadius:9, cursor:"pointer", border:"none", background:col, color:"#fff", fontSize:12, fontFamily:"monospace", letterSpacing:1, width:"100%", fontWeight:"bold", transition:"all .2s"});
+  const BTN      = (col: string, full?: boolean) => ({padding:full?"13px":"10px 18px", borderRadius:9, cursor:"pointer", border:`1px solid ${col}66`, background:`${col}22`, color:"#fff", fontSize:12, fontFamily:"monospace", letterSpacing:1, width:full?"100%":"auto", transition:"all .2s", display:"block"});
+  const BTN_SOLID= (col: string) => ({padding:"13px", borderRadius:9, cursor:"pointer", border:"none", background:col, color:"#fff", fontSize:12, fontFamily:"monospace", letterSpacing:1, width:"100%", fontWeight:"bold", transition:"all .2s"});
 
   return (
     <div style={{minHeight:"100vh", background:BG, color:"#dde0ff", fontFamily:"monospace", fontSize:13, position:"relative"}}>
